@@ -49,6 +49,7 @@
 #include "common/code_utils.hpp"
 #include "posix/platform/daemon.hpp"
 #include "posix/platform/infra_if.hpp"
+#include "posix/platform/ingress_filtering.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/udp.hpp"
@@ -144,6 +145,8 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #else
     gNetifName[0] = '\0';
 #endif
+
+    SuccessOrDie(ot::Posix::InitOtbrForwardChain());
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
