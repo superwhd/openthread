@@ -593,7 +593,7 @@ exit:
 
 static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 {
-    constexpr unsigned int kBufSize = 512;
+    constexpr unsigned int kBufSize = 1024;
     struct
     {
         struct nlmsghdr header;
