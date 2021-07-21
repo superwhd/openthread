@@ -518,9 +518,9 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
+void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint32_t aLen)
 {
-    uint8_t        len = RTA_LENGTH(aLen);
+    uint32_t        len = RTA_LENGTH(aLen);
     struct rtattr *rta;
 
     assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
@@ -578,7 +578,7 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
+//    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
