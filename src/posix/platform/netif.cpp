@@ -113,7 +113,7 @@ struct in6_prflags compile_time_check_prflags;
 extern int
     compile_time_check_struct_prf_ra[(sizeof(struct prf_ra) == sizeof(compile_time_check_prflags.prf_ra)) ? 1 : -1];
 #endif
-#include <net/if_dl.h>    // struct sockaddr_dl
+#include <net/if_dl.h> // struct sockaddr_dl
 #include <netinet6/nd6.h> // ND6_INFINITE_LIFETIME
 
 #ifdef __APPLE__
@@ -410,8 +410,8 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
         InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
-        ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
 
 #if defined(__APPLE__)
         ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
@@ -520,7 +520,7 @@ exit:
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint32_t aLen)
 {
-    uint32_t        len = RTA_LENGTH(aLen);
+    uint32_t       len = RTA_LENGTH(aLen);
     struct rtattr *rta;
 
     assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
@@ -531,7 +531,7 @@ void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const 
     rta->rta_len  = len;
     if (aLen)
     {
-        memcpy(RTA_DATA(rta), aData, 1025);
+        memcpy(static_cast<char *>(RTA_DATA(rta)), aData, aLen);
     }
     aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
 }
@@ -869,8 +869,9 @@ static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6,
     {
         otLogNotePlat("%s [%s] %s%s", isAdd ? "ADD" : "DEL", isUnicast ? "U" : "M",
                       inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                      error == OT_ERROR_ALREADY ? " (already subscribed, ignored)"
-                                                : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
+                      error == OT_ERROR_ALREADY     ? " (already subscribed, ignored)"
+                      : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)"
+                                                    : "");
     }
     else
     {
