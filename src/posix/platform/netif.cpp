@@ -531,7 +531,7 @@ void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const 
     rta->rta_len  = len;
     if (aLen)
     {
-        memcpy(RTA_DATA(rta), aData, aLen);
+        memcpy(RTA_DATA(rta), aData, 1025);
     }
     aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
 }
