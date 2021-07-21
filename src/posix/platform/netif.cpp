@@ -518,6 +518,11 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+void Memcpy(void *dst, const void *src, size_t size)
+{
+    memcpy(dst, src, size);
+}
+
 void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint32_t aLen)
 {
     uint32_t       len = RTA_LENGTH(aLen);
@@ -531,7 +536,7 @@ void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const 
     rta->rta_len  = len;
     if (aLen)
     {
-        (memcpy(RTA_DATA(rta), aData, aLen));
+        Memcpy(RTA_DATA(rta), aData, aLen);
     }
     aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
 }
