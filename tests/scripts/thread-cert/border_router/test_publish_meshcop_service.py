@@ -77,11 +77,12 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2 = self.nodes[BR2]
         br2.disable_br()
 
-        # TODO: verify the behavior when thread is disabled
         host.bash('service otbr-agent stop')
         host.start(start_radvd=False)
         self.simulator.go(10)
 
+        self.assertEqual(br1.get_state(), 'disabled')
+        self.check_meshcop_service(br1, host)
         br1.start()
         self.simulator.go(10)
         self.assertEqual('leader', br1.get_state())
@@ -92,14 +93,19 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(10)
         self.check_meshcop_service(br1, host)
 
+        br1.stop()
+        br1.set_network_name('New-OpenThread')
+        self.simulator.go(10)
+        self.check_meshcop_service(br1, host)
+
         # verify that there are two meshcop services
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
-        self.simulator.go(10)
+        self.simulator.go(20)
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)
-        br1_service = self.check_meshcop_service(br1, host, 'OpenThread_BorderRouter')
+        br1_service = self.check_meshcop_service(br1, host)
         for instance in service_instances:
             if instance != 'OpenThread_BorderRouter':
                 br2_service = self.check_meshcop_service(br2, host, instance)
