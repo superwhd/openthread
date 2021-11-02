@@ -208,6 +208,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/sntp_api.cpp                                       \
     src/core/api/srp_client_api.cpp                                 \
     src/core/api/srp_client_buffers_api.cpp                         \
+    src/core/api/srp_replication_api.cpp                            \
     src/core/api/srp_server_api.cpp                                 \
     src/core/api/tasklet_api.cpp                                    \
     src/core/api/tcp_api.cpp                                        \
@@ -310,6 +311,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/net/sntp_client.cpp                                    \
     src/core/net/socket.cpp                                         \
     src/core/net/srp_client.cpp                                     \
+    src/core/net/srp_replication.cpp                                \
     src/core/net/srp_server.cpp                                     \
     src/core/net/tcp6.cpp                                           \
     src/core/net/tcp6_ext.cpp                                       \
@@ -576,6 +578,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_network_data.cpp              \
     src/cli/cli_output.cpp                    \
     src/cli/cli_srp_client.cpp                \
+    src/cli/cli_srp_replication.cpp           \
     src/cli/cli_srp_server.cpp                \
     src/cli/cli_tcp.cpp                       \
     src/cli/cli_udp.cpp                       \

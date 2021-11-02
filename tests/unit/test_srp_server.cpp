@@ -371,7 +371,7 @@ void TestSrpServerBase(void)
 
     srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
 
-    srpServer->SetEnabled(true);
+    SuccessOrQuit(srpServer->SetEnabled(true));
     VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
 
     AdvanceTime(10000);
@@ -449,7 +449,7 @@ void TestSrpServerBase(void)
 
     Log("Disabling SRP server");
 
-    srpServer->SetEnabled(false);
+    SuccessOrQuit(srpServer->SetEnabled(false));
     AdvanceTime(100);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
@@ -494,7 +494,7 @@ void TestSrpServerReject(void)
 
     srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
 
-    srpServer->SetEnabled(true);
+    SuccessOrQuit(srpServer->SetEnabled(true));
     VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
 
     AdvanceTime(10000);
@@ -561,7 +561,7 @@ void TestSrpServerReject(void)
 
     Log("Disabling SRP server");
 
-    srpServer->SetEnabled(false);
+    SuccessOrQuit(srpServer->SetEnabled(false));
     AdvanceTime(100);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
@@ -606,7 +606,7 @@ void TestSrpServerIgnore(void)
 
     srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
 
-    srpServer->SetEnabled(true);
+    SuccessOrQuit(srpServer->SetEnabled(true));
     VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
 
     AdvanceTime(10000);
@@ -673,7 +673,7 @@ void TestSrpServerIgnore(void)
 
     Log("Disabling SRP server");
 
-    srpServer->SetEnabled(false);
+    SuccessOrQuit(srpServer->SetEnabled(false));
     AdvanceTime(100);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
