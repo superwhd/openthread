@@ -21,6 +21,7 @@
 
 #include "mbedtls/error.h"
 
+#define MBEDTLS_ERROR_C
 #if defined(MBEDTLS_ERROR_C) || defined(MBEDTLS_ERROR_STRERROR_DUMMY)
 
 #if defined(MBEDTLS_ERROR_C)

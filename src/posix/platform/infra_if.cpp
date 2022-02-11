@@ -106,6 +106,11 @@ const char *otSysGetInfraNetifName(void)
     return ot::Posix::InfraNetif::Get().GetNetifName();
 }
 
+unsigned int otSysGetInfraNetifIndex(void)
+{
+    return ot::Posix::InfraNetif::Get().GetNetifIndex();
+}
+
 namespace ot {
 namespace Posix {
 namespace {

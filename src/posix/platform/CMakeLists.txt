@@ -77,6 +77,7 @@ add_library(openthread-posix
     alarm.cpp
     backbone.cpp
     daemon.cpp
+    dso_transport.cpp
     entropy.cpp
     firewall.cpp
     hdlc_interface.cpp
