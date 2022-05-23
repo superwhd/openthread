@@ -373,6 +373,8 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
     otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
     void *                                  context          = mRegisterMulticastListenersContext;
 
+    failedAddresses[0].Clear();
+
     mRegisterMulticastListenersPending  = false;
     mRegisterMulticastListenersCallback = nullptr;
     mRegisterMulticastListenersContext  = nullptr;
@@ -476,6 +478,8 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *    
     Error        error;
     Ip6::Address failedAddresses[kIp6AddressesNumMax];
     uint8_t      failedAddressNum = 0;
+
+    failedAddresses[0].Clear();
 
     error = ParseMulticastListenerRegistrationResponse(aResult, aMessage, status, failedAddresses, failedAddressNum);
 

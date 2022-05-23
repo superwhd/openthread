@@ -232,7 +232,7 @@ void Srpl::AddPartner(const PartnerInfo &aInfo)
     PeerId       partnerId;
     DatasetId    partnerDatasetId;
     bool         allowsJoin;
-    Session *    session;
+    Session     *session;
 
     OT_ASSERT(!aInfo.mRemoved);
 
@@ -854,9 +854,9 @@ void Srpl::HandleDisconnected(Connection &aConnection)
     static_cast<Session &>(aConnection).HandleDisconnected();
 }
 
-Error Srpl::ProcessRequestMessage(Connection &          aConnection,
+Error Srpl::ProcessRequestMessage(Connection           &aConnection,
                                   Connection::MessageId aMessageId,
-                                  const Message &       aMessage,
+                                  const Message        &aMessage,
                                   Tlv::Type             aPrimaryTlvType)
 {
     return static_cast<Session &>(aConnection).ProcessRequestMessage(aMessageId, aMessage, aPrimaryTlvType);
@@ -867,9 +867,9 @@ Error Srpl::ProcessUnidirectionalMessage(Connection &aConnection, const Message 
     return static_cast<Session &>(aConnection).ProcessUnidirectionalMessage(aMessage, aPrimaryTlvType);
 }
 
-Error Srpl::ProcessResponseMessage(Connection &       aConnection,
+Error Srpl::ProcessResponseMessage(Connection        &aConnection,
                                    const Dns::Header &aHeader,
-                                   const Message &    aMessage,
+                                   const Message     &aMessage,
                                    Tlv::Type          aResponseTlvType,
                                    Tlv::Type          aRequestTlvType)
 {
@@ -988,9 +988,9 @@ void Srpl::DatasetId::SetSeqNumber(uint8_t aSeqNumber)
 // `Srpl::PartnerInfo`
 
 Error Srpl::PartnerInfo::ParseTxtData(Heap::String &aDomainName,
-                                      PeerId &      aPeerId,
-                                      DatasetId &   aDatasetId,
-                                      bool &        aAllowsJoin) const
+                                      PeerId       &aPeerId,
+                                      DatasetId    &aDatasetId,
+                                      bool         &aAllowsJoin) const
 {
     Error                   error;
     Dns::TxtEntry           entry;
@@ -1291,10 +1291,10 @@ Srpl::Session::Session(Instance &aInstance, const Ip6::SockAddr &aSockAddr, Part
 {
 }
 
-Srpl::Session::Session(Instance &           aInstance,
+Srpl::Session::Session(Instance            &aInstance,
                        const Ip6::SockAddr &aSockAddr,
                        PartnerState         aPartnerState,
-                       const PeerId &       aPartnerId)
+                       const PeerId        &aPartnerId)
     : Session(aInstance, aSockAddr, aPartnerState)
 {
     SetPartnerId(aPartnerId);
@@ -1670,7 +1670,7 @@ Error Srpl::Session::ProcessUnidirectionalMessage(const Message &aMessage, Tlv::
 }
 
 Error Srpl::Session::ProcessResponseMessage(const Dns::Header &aHeader,
-                                            const Message &    aMessage,
+                                            const Message     &aMessage,
                                             Tlv::Type          aResponseTlvType,
                                             Tlv::Type          aRequestTlvType)
 {
@@ -2416,7 +2416,7 @@ exit:
 void Srpl::Session::SendHostRequest(void)
 {
     Error     error   = kErrorNone;
-    Message * message = nullptr;
+    Message  *message = nullptr;
     TimeMilli now     = TimerMilli::GetNow();
 
     message = PrepareMessage(Tlv::kHostType);
@@ -2431,6 +2431,8 @@ void Srpl::Session::SendHostRequest(void)
 
         for (const Server::Service &service : mCandidateHost->mServices)
         {
+            LogInfo("Send host request service: %s %d %d %s", service.mServiceName.AsCString(), service.mIsCommitted,
+                    service.mIsDeleted, service.mDescription->mInstanceName.AsCString());
             SuccessOrExit(error = InsertInQueue(service.mAddMessagePtr, queue));
             SuccessOrExit(error = InsertInQueue(service.mDeleteMessagePtr, queue));
         }
@@ -2499,7 +2501,7 @@ exit:
     return error;
 }
 
-Error Srpl::Session::AppendHostMessageTlv(Message &                       aMessage,
+Error Srpl::Session::AppendHostMessageTlv(Message                        &aMessage,
                                           const RetainPtr<UpdateMessage> &aMessagePtr,
                                           TimeMilli                       aNow)
 {
@@ -2621,6 +2623,7 @@ void Srpl::Session::ProcessHostMessageTlv(const Message &aMessage, uint16_t aOff
 
     LogInfo("Host request - msg, rx-time:%u, lease:%u, key-lease:%u, len:%u", rxTimeOffset, grantedLease,
             grantedKeyLease, msgLength);
+    otDumpInfoPlat("SRPL process host request", message, msgLength);
 
     message->SetOffset(0);
 

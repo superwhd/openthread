@@ -101,7 +101,6 @@ void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage)
     OT_UNUSED_VARIABLE(aConnection);
     OT_UNUSED_VARIABLE(aMessage);
 
-    otLogInfoPlat("$$$$$$$$$ going to send ");
     auto conn = ot::Posix::DsoConnection::Find(aConnection);
     VerifyOrExit(conn != nullptr);
     conn->Send(aMessage);
@@ -146,7 +145,8 @@ void AcceptIncomingConnections(otInstance *aInstance)
         uint8_t              incomingAddrBuf[sizeof(sockaddr_in6)];
         size_t               len = 0;
         otSockAddr           addr;
-        sockaddr_in6 *       addrIn6;
+        in6_addr *       addrIn6;
+        in_addr *       addrIn;
         otPlatDsoConnection *conn;
 
         int ret = mbedtls_net_accept(&sListeningCtx, &incomingCtx, &incomingAddrBuf, sizeof(incomingAddrBuf), &len);
@@ -161,16 +161,31 @@ void AcceptIncomingConnections(otInstance *aInstance)
                 otLogCritPlat("!!!!! error accepting connection: %s", ot::Posix::MbedErrorToString(ret));
             }
         }
-        if (len != OT_IP6_ADDRESS_SIZE)
+        otLogWarnPlat("!!!!! address size===== %d", len);
+        if (len != OT_IP6_ADDRESS_SIZE && len != 4)
         {
             otLogWarnPlat("!!!!! unexpected address size: %d", len);
             ExitNow();
         }
+
         SuccessOrDie(mbedtls_net_set_nonblock(&incomingCtx));
 
-        addrIn6 = reinterpret_cast<sockaddr_in6 *>(incomingAddrBuf);
-        memcpy(&addr.mAddress, &addrIn6->sin6_addr, sizeof(addrIn6->sin6_addr));
-        addr.mPort = addrIn6->sin6_port;
+        if (len == OT_IP6_ADDRESS_SIZE) {  // TODO: the way of handling addr may be wrong
+            addrIn6 = reinterpret_cast<in6_addr *>(incomingAddrBuf);
+            memcpy(&addr.mAddress.mFields.m8, &addrIn6, len);
+            addr.mPort = 0;  // TODO
+        } else if (len == 4) {
+            addrIn = reinterpret_cast<in_addr *>(incomingAddrBuf);
+            memset(&addr.mAddress, 0, sizeof(addr.mAddress));
+            memcpy(addr.mAddress.mFields.m32 + 3, &addrIn, len);
+            addr.mAddress.mFields.m16[5] = 0xff;
+            addr.mAddress.mFields.m16[6] = 0xff;
+            addr.mPort = 0;  // TODO
+            otLogWarnPlat("!!!!! IPV4 incoming connection: %u", addrIn);
+        } else {
+            otLogWarnPlat("!!!!! unknown address type !!!! ");
+            ExitNow();
+        }
         conn       = otPlatDsoAccept(aInstance, &addr);
 
         otLogWarnPlat("!!!!! accepting connection: %16x", incomingAddrBuf);

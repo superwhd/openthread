@@ -48,13 +48,13 @@ import thread_cert
 #
 
 BR1 = 1
-BR2 = 2
-BR3 = 3
-HOST = 4
-ED1 = 5
-SED1 = 6
-ED2 = 7
-SED2 = 8
+# BR2 = 2
+BR3 = 2
+HOST = 3
+ED1 = 4
+# SED1 = 6
+# ED2 = 7
+# SED2 = 8
 
 LEASE = 200  # Seconds
 KEY_LEASE = 200  # Seconds
@@ -66,19 +66,13 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
     TOPOLOGY = {
         BR1: {
             'name': 'BR1',
-            'allowlist': [BR2, BR3, ED1, SED1],
-            'is_otbr': True,
-            'version': '1.2',
-        },
-        BR2: {
-            'name': 'BR2',
-            'allowlist': [BR1, BR3, ED2, SED2],
+            'allowlist': [BR3, ED1],
             'is_otbr': True,
             'version': '1.2',
         },
         BR3: {
             'name': 'BR3',
-            'allowlist': [BR1, BR2],
+            'allowlist': [BR1],
             'is_otbr': True,
             'version': '1.2',
         },
@@ -92,41 +86,13 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
             'version': '1.2',
             'mode': 'rn',
         },
-        SED1: {
-            'name': 'SED1',
-            'allowlist': [BR1],
-            'version': '1.2',
-            'mode': 'n',
-        },
-        ED2: {
-            'name': 'ED2',
-            'allowlist': [BR2],
-            'version': '1.2',
-            'mode': 'rn',
-        },
-        SED2: {
-            'name': 'SED2',
-            'allowlist': [BR2],
-            'version': '1.2',
-            'mode': 'n',
-        },
     }
 
     def test(self):
         br1 = self.nodes[BR1]
-        br2 = self.nodes[BR2]
         br3 = self.nodes[BR3]
         host = self.nodes[HOST]
         ed1 = self.nodes[ED1]
-        sed1 = self.nodes[SED1]
-        ed2 = self.nodes[ED2]
-        sed2 = self.nodes[SED2]
-        sed1.set_pollperiod(3000)
-        sed2.set_pollperiod(3000)
-
-        br1.send_command('1111111111111111111111111')
-        br2.send_command('2222222222222222222222222')
-        br3.send_command('3333333333333333333333333')
 
         # Initially BR3
         br3.stop_otbr_service()
@@ -140,19 +106,9 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
 
         self.simulator.go(5)
 
-        br2.start()
-        self.simulator.go(5)
-        self.assertEqual('router', br2.get_state())
-
         ed1.start()
-        sed1.start()
-        ed2.start()
-        sed2.start()
         self.simulator.go(5)
         self.assertEqual('child', ed1.get_state())
-        self.assertEqual('child', sed1.get_state())
-        self.assertEqual('child', ed2.get_state())
-        self.assertEqual('child', sed2.get_state())
 
         # Step 1: ED1, SED1, ED2, SED2 register services
         ed1.srp_client_set_host_name('ed1-host')
@@ -162,26 +118,9 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
         ed1.srp_client_add_service('ed1-2', '_ed1._tcp', 11112, priority=1, weight=2, txt_entries=['a=1'])
         ed1.srp_client_enable_auto_start_mode()
 
-        sed1.srp_client_set_host_name('sed1-host')
-        sed1.srp_client_set_host_address(sed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        sed1.srp_client_add_service('sed1', '_sed1._tcp', 22222, priority=1, weight=2)
-        sed1.srp_client_enable_auto_start_mode()
-
-        ed2.srp_client_set_host_name('ed2-host')
-        ed2.srp_client_set_host_address(ed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        ed2.srp_client_add_service('ed2', '_ed2._tcp', 33333, priority=1, weight=2)
-        ed2.srp_client_enable_auto_start_mode()
-
-        sed2.srp_client_set_host_name('sed2-host')
-        sed2.srp_client_set_host_address(sed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        sed2.srp_client_add_service('sed2', '_sed2._tcp', 44444, priority=1, weight=2, txt_entries=['b=2', 'c=3'])
-        sed2.srp_client_enable_auto_start_mode()
-
         self.simulator.go(10)
 
-        servers = [br1, br2]
-        self.assertEqual(len(br1.srp_server_get_services()), 5)
-        self.assertEqual(len(br2.srp_server_get_services()), 5)
+        servers = [br1]
         self.check_srp_host_and_service(ed1, servers, host_name='ed1-host',
                                         address=ed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                         service_name='ed1-1',
@@ -196,35 +135,12 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
                                         port=11112,
                                         txt_entries=['a=31']
                                         )
-        self.check_srp_host_and_service(sed1, servers, host_name='sed1-host',
-                                        address=sed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='sed1',
-                                        service_type='_sed1._tcp',
-                                        port=22222,
-                                        txt_entries=[]
-                                        )
-        self.check_srp_host_and_service(ed2, servers, host_name='ed2-host',
-                                        address=ed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='ed2',
-                                        service_type='_ed2._tcp',
-                                        port=33333,
-                                        txt_entries=[]
-                                        )
-        self.check_srp_host_and_service(sed2, servers, host_name='sed2-host',
-                                        address=sed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='sed2',
-                                        service_type='_sed2._tcp',
-                                        port=44444,
-                                        txt_entries=['b=32', 'c=33']
-                                        )
 
         # Step 2: ED1 removes service ed1-2
         ed1.srp_client_remove_service('ed1-2', '_ed1._tcp')
 
         self.simulator.go(5)
 
-        self.assertEqual(len(br1.srp_server_get_services()), 5)
-        self.assertEqual(len(br2.srp_server_get_services()), 5)
         self.check_srp_host_and_service(ed1, servers, host_name='ed1-host',
                                         address=ed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                         service_name='ed1-1',
@@ -233,50 +149,23 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
                                         txt_entries=['a=31']
                                         )
         self.check_srp_host_and_service(ed1, servers, service_name='ed1-2', service_type='_ed1._tcp', deleted=True)
-        self.check_srp_host_and_service(sed1, servers, host_name='sed1-host',
-                                        address=sed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='sed1',
-                                        service_type='_sed1._tcp',
-                                        port=22222,
-                                        txt_entries=[]
-                                        )
-        self.check_srp_host_and_service(ed2, servers, host_name='ed2-host',
-                                        address=ed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='ed2',
-                                        service_type='_ed2._tcp',
-                                        port=33333,
-                                        txt_entries=[]
-                                        )
-        self.check_srp_host_and_service(sed2, servers, host_name='sed2-host',
-                                        address=sed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='sed2',
-                                        service_type='_sed2._tcp',
-                                        port=44444,
-                                        txt_entries=['b=32', 'c=33']
-                                        )
 
         # Step 3: BR 3 starts
         br3.start_otbr_service()
         br3.start()
-        servers = [br1, br2, br3]
+        servers = [br1, br3]
 
-        # br1.stop_ot_ctl()
-        # br2.stop_ot_ctl()
-        # br3.stop_ot_ctl()
+        br1.stop_ot_ctl()
+        br3.stop_ot_ctl()
 
-        # while True:
-        #     pass
-
-        self.simulator.go(10)
+        while True:
+            pass
 
         # Step 4: SED2 removes host
-        sed2.srp_client_remove_host(remove_key=True)
-
         self.simulator.go(5)
 
-        # self.assertEqual(len(br1.srp_server_get_services()), 4)
-        # self.assertEqual(len(br2.srp_server_get_services()), 4)
-        # self.assertEqual(len(br3.srp_server_get_services()), 4)
+        self.assertEqual(len(br1.srp_server_get_services()), 2)
+        self.assertEqual(len(br3.srp_server_get_services()), 1)
         self.check_srp_host_and_service(ed1, servers, host_name='ed1-host',
                                         address=ed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                         service_name='ed1-1',
@@ -285,20 +174,6 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
                                         txt_entries=['a=31']
                                         )
         self.check_srp_host_and_service(ed1, [br1], service_name='ed1-2', service_type='_ed1._tcp', deleted=True)
-        self.check_srp_host_and_service(sed1, servers, host_name='sed1-host',
-                                        address=sed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='sed1',
-                                        service_type='_sed1._tcp',
-                                        port=22222,
-                                        txt_entries=[]
-                                        )
-        self.check_srp_host_and_service(ed2, servers, host_name='ed2-host',
-                                        address=ed2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                        service_name='ed2',
-                                        service_type='_ed2._tcp',
-                                        port=33333,
-                                        txt_entries=[]
-                                        )
 
     def check_srp_host_and_service(self, client, servers, host_name='', address='', service_name='', service_type='',
                                    port=0, txt_entries=[], deleted=False):

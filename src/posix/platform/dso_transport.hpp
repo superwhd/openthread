@@ -3,6 +3,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include <vector>
 #include <openthread/openthread-system.h>
 
@@ -56,6 +57,12 @@ public:
         sMap.erase(mConnection);
     }
 
+    bool IsIpv4Mapped(const otIp6Address &aAddress)
+    {
+        const auto &m16 = aAddress.mFields.m16;
+        return m16[0] == 0 && m16[1] == 0 && m16[2] == 0 && m16[3] == 0 && m16[4] == 0 && m16[5] == 0xffff;
+    }
+
     Error Connect(const otSockAddr *aPeerSockAddr)
     {
         auto  _     = CDLogger("Connect");
@@ -65,6 +72,11 @@ public:
         char buf[OT_IP6_ADDRESS_STRING_SIZE];
         otIp6AddressToString(&aPeerSockAddr->mAddress, buf, sizeof(buf));
         otLogInfoPlat("###### connecting to : %s %s", buf, std::to_string(aPeerSockAddr->mPort).c_str());
+        if (IsIpv4Mapped(aPeerSockAddr->mAddress))
+        {
+            inet_ntop(AF_INET, aPeerSockAddr->mAddress.mFields.m32 + 3, buf, INET_ADDRSTRLEN);
+            otLogInfoPlat("###### connecting to IPV4 mapped addr: %s %s", buf, std::to_string(aPeerSockAddr->mPort).c_str());
+        }
 
         if ((ret = mbedtls_net_connect(&mCtx, buf, std::to_string(aPeerSockAddr->mPort).c_str(),
                                        MBEDTLS_NET_PROTO_TCP)) != 0)
@@ -165,7 +177,7 @@ public:
             mBufferBegin += readLen;
             if (otMessageGetLength(mPendingMessage) == mWantMessageSize)
             {
-                otLogInfoPlat("!!!!! handle DSO receive: %hu", mWantMessageSize);
+                otLogInfoPlat("handle DSO receive: %hu", mWantMessageSize);
                 otPlatDsoHandleReceive(mConnection, mPendingMessage);
                 mPendingMessage  = nullptr;
                 mWantMessageSize = 0;
@@ -257,7 +269,7 @@ private:
 
     otPlatDsoConnection *mConnection;
     otSockAddr           mPeerSockAddr{};
-    otMessage *          mPendingMessage  = nullptr;
+    otMessage           *mPendingMessage  = nullptr;
     size_t               mWantMessageSize = 0;
     uint16_t             mBufferBegin     = 0;
     uint16_t             mBufferEnd       = 0;
