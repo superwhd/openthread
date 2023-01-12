@@ -42,7 +42,7 @@
 #endif
 
 #include <openthread/srp_replication.h>
-#include <openthread/platform/srp_replication.h>
+#include <openthread/platform/srpl_dnssd.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"

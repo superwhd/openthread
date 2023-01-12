@@ -120,6 +120,11 @@ void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCount
     ot::Posix::InfraNetif::Get().CountAddresses(*aAddressCounters);
 }
 
+unsigned int otSysGetInfraNetifIndex(void)
+{
+    return ot::Posix::InfraNetif::Get().GetNetifIndex();
+}
+
 namespace ot {
 namespace Posix {
 namespace {

@@ -566,6 +566,7 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
     header.SetQueryType(Dns::Header::kQueryTypeDso);
     header.SetResponseCode(aResponseCode);
     SuccessOrExit(error = aMessage.Prepend(header));
+    //    char buf[2000];
 
     SuccessOrExit(error = AppendPadding(aMessage));
 
@@ -584,6 +585,9 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
 
     LogInfo("Sending %s message with id %u to %s", MessageTypeToString(aMessageType), aMessageId,
             mPeerSockAddr.ToString().AsCString());
+    //
+    //    aMessage.Read(0, buf, sizeof(buf));
+    //    otDumpInfoPlat("^^^^^^^^^^^ going to send DSO message step 3", buf, aMessage.GetLength());
 
     switch (mState)
     {

@@ -39,10 +39,13 @@
 #include <inttypes.h>
 
 #include <openthread-core-config.h>
+#include <random>
+#include <string>
 #include <openthread/border_router.h>
 #include <openthread/heap.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/dso_transport.h>
 #include <openthread/platform/infra_if.h>
 #include <openthread/platform/otns.h>
 #include <openthread/platform/radio.h>
@@ -392,6 +395,27 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
     return rval;
 }
 
+// void SendDsoMessage(otInstance *aInstance)
+//{
+//    static unsigned int         count = 0;
+//    static otPlatDsoConnection *conn  = nullptr;
+//    ++count;
+//    if (conn == nullptr)
+//    {
+//        conn = reinterpret_cast<otPlatDsoConnection *>(&count);
+//        otSockAddr addr;
+//        addr.mPort = 53533;
+//        SuccessOrDie(otIp6AddressFromString("::", &addr.mAddress));
+//        otPlatDsoConnect(conn, &addr);
+//    }
+//    otMessage  *message = otIp6NewMessage(aInstance, nullptr);
+//    std::string str     = "message [" + std::to_string(count) + "] \n";
+//    IgnoreError(otMessageAppend(message, str.data(), str.size()));
+//    otPlatDsoSend(conn, message);
+//    otLogInfoPlat("sending TCP message: %u", count);
+//    otMessageFree(message);
+//}
+
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop)
 {
     ot::Posix::Mainloop::Manager::Get().Process(*aMainloop);
@@ -408,6 +432,16 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #endif
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    platformDsoProcess(aInstance);
+#endif
 }
 
 bool IsSystemDryRun(void) { return gDryRun; }
+
+uint16_t otPlatSrplPort()
+{
+    //    static uint16_t port = std::random_device()() % 65536;
+    static constexpr uint16_t port = 853;
+    return port;
+}

@@ -421,6 +421,8 @@ void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxF
  */
 void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
+void platformDsoProcess(otInstance *aInstance);
+
 /**
  * This function creates a socket with SOCK_CLOEXEC flag set.
  *

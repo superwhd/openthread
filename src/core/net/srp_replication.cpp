@@ -2419,6 +2419,8 @@ void Srpl::Session::SendHostRequest(void)
 
         for (const Server::Service &service : mCandidateHost->mServices)
         {
+            LogInfo("Send host request service: %s %d %d %s", service.mServiceName.AsCString(), service.mIsCommitted,
+                    service.mIsDeleted, service.mDescription->mInstanceName.AsCString());
             SuccessOrExit(error = InsertInQueue(service.mAddMessagePtr, queue));
             SuccessOrExit(error = InsertInQueue(service.mDeleteMessagePtr, queue));
         }
@@ -2608,6 +2610,7 @@ void Srpl::Session::ProcessHostMessageTlv(const Message &aMessage, uint16_t aOff
 
     LogInfo("Host request - msg, rx-time:%u, lease:%u, key-lease:%u, len:%u", rxTimeOffset, grantedLease,
             grantedKeyLease, msgLength);
+    otDumpInfoPlat("SRPL process host request", message, msgLength);
 
     message->SetOffset(0);
 
