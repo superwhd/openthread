@@ -253,30 +253,6 @@ unsigned int otSysGetInfraNetifIndex(void);
 
 uint16_t otPlatSrplPort();
 
-struct CDLogger
-{
-    CDLogger(const char *aContent)
-    {
-        if (!mEnabled)
-        {
-            return;
-        }
-        strcpy(mContent, aContent);
-        printf("[BEGIN]: %s\n", mContent);
-    }
-    ~CDLogger()
-    {
-        if (!mEnabled)
-        {
-            return;
-        }
-        printf("[END]: %s\n", mContent);
-    }
-
-    bool mEnabled = false;
-
-    char mContent[260];
-};
 
 #ifdef __cplusplus
 } // end of extern "C"

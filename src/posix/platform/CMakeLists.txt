@@ -106,7 +106,6 @@ add_library(openthread-posix
     backtrace.cpp
     config_file.cpp
     daemon.cpp
-    dso_transport.cpp
     entropy.cpp
     firewall.cpp
     hdlc_interface.cpp

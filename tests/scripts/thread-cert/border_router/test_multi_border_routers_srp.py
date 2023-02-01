@@ -125,11 +125,7 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
         sed1.set_pollperiod(3000)
         sed2.set_pollperiod(3000)
 
-        br1.send_command('1111111111111111111111111')
-        br2.send_command('2222222222222222222222222')
-        br3.send_command('3333333333333333333333333')
-
-        # Initially BR3
+        # Disable BR3 at the beginning
         br3.stop_otbr_service()
 
         host.start(start_radvd=False)
@@ -148,11 +144,6 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
         self.assertEqual('router', br2.get_state())
         br2.send_command('srp replication enable')
         br2._expect_done()
-
-        # while True:
-        #     logging.info('ready for debugging')
-        #     time.sleep(3)
-        #     pass
 
         ed1.start()
         sed1.start()
@@ -266,7 +257,7 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
                                         txt_entries=['b=32', 'c=33']
                                         )
 
-        # Step 3: BR 3 starts
+        # Step 3: BR3 starts
         br3.start_otbr_service()
         br3.start()
         servers = [br1, br2, br3]
@@ -274,27 +265,16 @@ class MultiBorderRoutersSrp(thread_cert.TestCase):
         br3.send_command('srp replication enable')
         br3._expect_done()
 
-        # br1.stop_ot_ctl()
-        # br2.stop_ot_ctl()
-        # br3.stop_ot_ctl()
-
-        # while True:
-        #     pass
-
-        self.simulator.go(20)
-
-        logging.info("111111111111111111##########")
         br3.srp_server_get_services()
-        logging.info("222222222222222222##########")
 
         # Step 4: SED2 removes host
         sed2.srp_client_remove_host(remove_key=True)
 
         self.simulator.go(5)
 
-        # self.assertEqual(len(br1.srp_server_get_services()), 4)
-        # self.assertEqual(len(br2.srp_server_get_services()), 4)
-        # self.assertEqual(len(br3.srp_server_get_services()), 4)
+        self.assertEqual(len(br1.srp_server_get_services()), 4)
+        self.assertEqual(len(br2.srp_server_get_services()), 4)
+        self.assertEqual(len(br3.srp_server_get_services()), 4)
         self.check_srp_host_and_service(ed1, servers, host_name='ed1-host',
                                         address=ed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                         service_name='ed1-1',

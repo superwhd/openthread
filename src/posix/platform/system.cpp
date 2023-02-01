@@ -439,9 +439,3 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 
 bool IsSystemDryRun(void) { return gDryRun; }
 
-uint16_t otPlatSrplPort()
-{
-    //    static uint16_t port = std::random_device()() % 65536;
-    static constexpr uint16_t port = 853;
-    return port;
-}
