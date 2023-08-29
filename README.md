@@ -64,3 +64,4 @@ OpenThread support is available on GitHub:
 
 - Bugs and feature requests — [submit to the Issue Tracker](https://github.com/openthread/openthread/issues)
 - Community Discussion - [ask questions, share ideas, and engage with other community members](https://github.com/openthread/openthread/discussions)
+
