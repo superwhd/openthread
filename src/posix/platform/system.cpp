@@ -151,6 +151,10 @@ void platformInitRcpMode(otPlatformConfig *aPlatformConfig)
     ot::Posix::MdnsSocket::Get().Init();
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    platformResolverInit();
+#endif
+
     gNetifName[0] = '\0';
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
@@ -408,6 +412,9 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(aMainloop);
 #endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    platformResolverUpdate(aMainloop);
+#endif
 
     if (otTaskletsArePending(aInstance))
     {
@@ -475,6 +482,9 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(aMainloop);
+#endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    platformResolverProcess(aMainloop);
 #endif
 }
 

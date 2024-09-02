@@ -215,10 +215,6 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-ot::Posix::Resolver gResolver;
-#endif
-
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
 // on NetBSD, MLD monitoring simply doesn't work
@@ -1465,17 +1461,17 @@ exit:
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #if defined(__FreeBSD__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #endif
 
 #if defined(__APPLE__)
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a)-1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 #define DARWIN_SA_SIZE(sa) ROUNDUP(sa->sa_len)
 #define SA_SIZE(sa) DARWIN_SA_SIZE(sa)
 #endif
 
 #if defined(__NetBSD__)
-#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a)-1U) | ((n)-1))) : (n))
+#define RT_ROUNDUP2(a, n) ((a) > 0 ? (1 + (((a) - 1U) | ((n) - 1))) : (n))
 #define RT_ROUNDUP(a) RT_ROUNDUP2((a), sizeof(uint64_t))
 #define SA_SIZE(sa) RT_ROUNDUP(sa->sa_len)
 #endif
@@ -2285,138 +2281,126 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     nat64Init();
 #endif
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Init();
-#endif
-}
 
-void platformNetifTearDown(void) {}
+    void platformNetifTearDown(void) {}
 
-void platformNetifDeinit(void)
-{
-    if (sTunFd != -1)
+    void platformNetifDeinit(void)
     {
-        close(sTunFd);
-        sTunFd = -1;
+        if (sTunFd != -1)
+        {
+            close(sTunFd);
+            sTunFd = -1;
 
 #if defined(__NetBSD__) || defined(__FreeBSD__)
-        destroyTunnel();
+            destroyTunnel();
 #endif
-    }
+        }
 
-    if (sIpFd != -1)
-    {
-        close(sIpFd);
-        sIpFd = -1;
-    }
+        if (sIpFd != -1)
+        {
+            close(sIpFd);
+            sIpFd = -1;
+        }
 
-    if (sNetlinkFd != -1)
-    {
-        close(sNetlinkFd);
-        sNetlinkFd = -1;
-    }
+        if (sNetlinkFd != -1)
+        {
+            close(sNetlinkFd);
+            sNetlinkFd = -1;
+        }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd != -1)
-    {
-        close(sMLDMonitorFd);
-        sMLDMonitorFd = -1;
-    }
+        if (sMLDMonitorFd != -1)
+        {
+            close(sMLDMonitorFd);
+            sMLDMonitorFd = -1;
+        }
 #endif
 
-    gNetifIndex = 0;
-}
+        gNetifIndex = 0;
+    }
 
-void platformNetifUpdateFdSet(otSysMainloopContext *aContext)
-{
-    VerifyOrExit(gNetifIndex > 0);
+    void platformNetifUpdateFdSet(otSysMainloopContext * aContext)
+    {
+        VerifyOrExit(gNetifIndex > 0);
 
-    assert(aContext != nullptr);
-    assert(sTunFd >= 0);
-    assert(sNetlinkFd >= 0);
-    assert(sIpFd >= 0);
+        assert(aContext != nullptr);
+        assert(sTunFd >= 0);
+        assert(sNetlinkFd >= 0);
+        assert(sIpFd >= 0);
 
-    FD_SET(sTunFd, &aContext->mReadFdSet);
-    FD_SET(sTunFd, &aContext->mErrorFdSet);
-    FD_SET(sNetlinkFd, &aContext->mReadFdSet);
-    FD_SET(sNetlinkFd, &aContext->mErrorFdSet);
+        FD_SET(sTunFd, &aContext->mReadFdSet);
+        FD_SET(sTunFd, &aContext->mErrorFdSet);
+        FD_SET(sNetlinkFd, &aContext->mReadFdSet);
+        FD_SET(sNetlinkFd, &aContext->mErrorFdSet);
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
-    FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
+        FD_SET(sMLDMonitorFd, &aContext->mReadFdSet);
+        FD_SET(sMLDMonitorFd, &aContext->mErrorFdSet);
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.UpdateFdSet(*aContext);
-#endif
+        if (sTunFd > aContext->mMaxFd)
+        {
+            aContext->mMaxFd = sTunFd;
+        }
 
-    if (sTunFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sTunFd;
-    }
-
-    if (sNetlinkFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sNetlinkFd;
-    }
+        if (sNetlinkFd > aContext->mMaxFd)
+        {
+            aContext->mMaxFd = sNetlinkFd;
+        }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd > aContext->mMaxFd)
-    {
-        aContext->mMaxFd = sMLDMonitorFd;
-    }
+        if (sMLDMonitorFd > aContext->mMaxFd)
+        {
+            aContext->mMaxFd = sMLDMonitorFd;
+        }
 #endif
-exit:
-    return;
-}
-
-void platformNetifProcess(const otSysMainloopContext *aContext)
-{
-    assert(aContext != nullptr);
-    VerifyOrExit(gNetifIndex > 0);
-
-    if (FD_ISSET(sTunFd, &aContext->mErrorFdSet))
-    {
-        close(sTunFd);
-        DieNow(OT_EXIT_FAILURE);
+    exit:
+        return;
     }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mErrorFdSet))
+    void platformNetifProcess(const otSysMainloopContext *aContext)
     {
-        close(sNetlinkFd);
-        DieNow(OT_EXIT_FAILURE);
-    }
+        assert(aContext != nullptr);
+        VerifyOrExit(gNetifIndex > 0);
+
+        if (FD_ISSET(sTunFd, &aContext->mErrorFdSet))
+        {
+            close(sTunFd);
+            DieNow(OT_EXIT_FAILURE);
+        }
+
+        if (FD_ISSET(sNetlinkFd, &aContext->mErrorFdSet))
+        {
+            close(sNetlinkFd);
+            DieNow(OT_EXIT_FAILURE);
+        }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mErrorFdSet))
-    {
-        close(sMLDMonitorFd);
-        DieNow(OT_EXIT_FAILURE);
-    }
+        if (FD_ISSET(sMLDMonitorFd, &aContext->mErrorFdSet))
+        {
+            close(sMLDMonitorFd);
+            DieNow(OT_EXIT_FAILURE);
+        }
 #endif
 
-    if (FD_ISSET(sTunFd, &aContext->mReadFdSet))
-    {
-        processTransmit(gInstance);
-    }
+        if (FD_ISSET(sTunFd, &aContext->mReadFdSet))
+        {
+            processTransmit(gInstance);
+        }
 
-    if (FD_ISSET(sNetlinkFd, &aContext->mReadFdSet))
-    {
-        processNetlinkEvent(gInstance);
-    }
+        if (FD_ISSET(sNetlinkFd, &aContext->mReadFdSet))
+        {
+            processNetlinkEvent(gInstance);
+        }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (FD_ISSET(sMLDMonitorFd, &aContext->mReadFdSet))
-    {
-        processMLDEvent(gInstance);
+        if (FD_ISSET(sMLDMonitorFd, &aContext->mReadFdSet))
+        {
+            processMLDEvent(gInstance);
+        }
+#endif
+
+    exit:
+        return;
     }
-#endif
-
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.Process(*aContext);
-#endif
-
-exit:
-    return;
-}
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
